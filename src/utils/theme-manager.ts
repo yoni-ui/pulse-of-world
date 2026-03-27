@@ -7,7 +7,8 @@ const STORAGE_KEY = 'worldmonitor-theme';
 const DEFAULT_THEME: Theme = 'dark';
 
 function resolveThemeColor(theme: Theme, variant: string | undefined): string {
-  if (theme === 'dark') return variant === 'happy' ? '#1A2332' : '#0a0f0a';
+  /* Dark default matches Conflict Radar --bg (main.css :root --bg) */
+  if (theme === 'dark') return variant === 'happy' ? '#1A2332' : '#0a0a0a';
   return variant === 'happy' ? '#FAFAF5' : '#f8f9fa';
 }
 

@@ -5,22 +5,39 @@ export interface VariantMeta {
   url: string;
   siteName: string;
   shortName: string;
+  /** Short word shown next to the header logo (e.g. RADAR, TECH) */
+  headerLogoWord: string;
   subject: string;
   classification: string;
   categories: string[];
   features: string[];
+  /** Open Graph / Twitter overrides (defaults to title/description if omitted) */
+  ogTitle?: string;
+  ogDescription?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  ogImage?: string;
 }
 
 export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
   full: {
-    title: 'World Monitor - Real-Time Global Intelligence Dashboard',
-    description: 'Real-time global intelligence dashboard with live news, markets, military tracking, infrastructure monitoring, and geopolitical data. OSINT in one view.',
-    keywords: 'global intelligence, geopolitical dashboard, world news, market data, military bases, nuclear facilities, undersea cables, conflict zones, real-time monitoring, situation awareness, OSINT, flight tracking, AIS ships, earthquake monitor, protest tracker, power outages, oil prices, government spending, polymarket predictions',
-    url: 'https://www.worldmonitor.app/',
-    siteName: 'World Monitor',
-    shortName: 'World Monitor',
-    subject: 'Real-Time Global Intelligence and Situation Awareness',
-    classification: 'Intelligence Dashboard, OSINT Tool, News Aggregator',
+    title: 'PulseOfGlobe AI — Real-Time Global Intelligence Platform',
+    description:
+      'PulseOfGlobe AI transforms global data, news, and sentiment into real-time insights. Track world trends, risks, and opportunities across countries and industries.',
+    keywords:
+      'global intelligence, AI analytics, world trends, sentiment analysis, data insights, geopolitics, economic trends, AI platform, global dashboard',
+    url: 'https://pulseofglobe.ai/',
+    siteName: 'PulseOfGlobe AI',
+    shortName: 'PulseOfGlobe AI',
+    headerLogoWord: 'PULSE',
+    subject: 'Real-Time Global Intelligence Platform',
+    classification: 'AI Intelligence Platform, Global Dashboard, Business Application',
+    ogTitle: 'PulseOfGlobe AI — See the Pulse of the World in Real-Time',
+    ogDescription:
+      'Understand global events, sentiment, and trends as they happen. AI-powered insights across countries, economies, and industries.',
+    twitterTitle: 'PulseOfGlobe AI — Real-Time Global Intelligence',
+    twitterDescription: 'Track global sentiment, risks, and trends with AI-powered insights.',
+    ogImage: 'https://pulseofglobe.ai/og-image.jpg',
     categories: ['news', 'productivity'],
     features: [
       'Real-time news aggregation',
@@ -44,6 +61,7 @@ export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
     url: 'https://tech.worldmonitor.app/',
     siteName: 'Tech Monitor',
     shortName: 'TechMonitor',
+    headerLogoWord: 'TECH',
     subject: 'AI, Tech Industry, and Startup Ecosystem Intelligence',
     classification: 'Tech Dashboard, AI Tracker, Startup Intelligence',
     categories: ['news', 'business'],
@@ -68,6 +86,7 @@ export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
     url: 'https://happy.worldmonitor.app/',
     siteName: 'Happy Monitor',
     shortName: 'HappyMonitor',
+    headerLogoWord: 'HAPPY',
     subject: 'Good News, Global Progress, and Human Achievement',
     classification: 'Positive News Dashboard, Progress Tracker',
     categories: ['news', 'lifestyle'],
@@ -87,6 +106,7 @@ export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
     url: 'https://finance.worldmonitor.app/',
     siteName: 'Finance Monitor',
     shortName: 'FinanceMonitor',
+    headerLogoWord: 'FINANCE',
     subject: 'Global Markets, Trading, and Financial Intelligence',
     classification: 'Finance Dashboard, Market Tracker, Trading Intelligence',
     categories: ['finance', 'news'],
@@ -111,6 +131,7 @@ export const VARIANT_META: { full: VariantMeta; [k: string]: VariantMeta } = {
     url: 'https://commodity.worldmonitor.app/',
     siteName: 'Commodity Monitor',
     shortName: 'CommodityMonitor',
+    headerLogoWord: 'COMMODITY',
     subject: 'Commodity Markets, Mining, and Supply Chain Intelligence',
     classification: 'Commodity Dashboard, Supply Chain Tracker, Resource Intelligence',
     categories: ['finance', 'business'],

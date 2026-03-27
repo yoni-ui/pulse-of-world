@@ -42,6 +42,13 @@ function htmlVariantPlugin(activeMeta: VariantMeta, activeVariant: string, isDes
   return {
     name: 'html-variant',
     transformIndexHtml(html) {
+      const ogTitle = activeMeta.ogTitle ?? activeMeta.title;
+      const ogDescription = activeMeta.ogDescription ?? activeMeta.description;
+      const twitterTitle = activeMeta.twitterTitle ?? activeMeta.title;
+      const twitterDescription = activeMeta.twitterDescription ?? activeMeta.description;
+      const ogImage =
+        activeMeta.ogImage ?? `${new URL(activeMeta.url).origin}/favico/og-image.png`;
+
       let result = html
         .replace(/<title>.*?<\/title>/, `<title>${activeMeta.title}</title>`)
         .replace(/<meta name="title" content=".*?" \/>/, `<meta name="title" content="${activeMeta.title}" />`)
@@ -50,25 +57,31 @@ function htmlVariantPlugin(activeMeta: VariantMeta, activeVariant: string, isDes
         .replace(/<link rel="canonical" href=".*?" \/>/, `<link rel="canonical" href="${activeMeta.url}" />`)
         .replace(/<meta name="application-name" content=".*?" \/>/, `<meta name="application-name" content="${activeMeta.siteName}" />`)
         .replace(/<meta property="og:url" content=".*?" \/>/, `<meta property="og:url" content="${activeMeta.url}" />`)
-        .replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${activeMeta.title}" />`)
-        .replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${activeMeta.description}" />`)
+        .replace(/<meta property="og:title" content=".*?" \/>/, `<meta property="og:title" content="${ogTitle}" />`)
+        .replace(/<meta property="og:description" content=".*?" \/>/, `<meta property="og:description" content="${ogDescription}" />`)
+        .replace(/<meta property="og:image" content=".*?" \/>/, `<meta property="og:image" content="${ogImage}" />`)
         .replace(/<meta property="og:site_name" content=".*?" \/>/, `<meta property="og:site_name" content="${activeMeta.siteName}" />`)
         .replace(/<meta name="subject" content=".*?" \/>/, `<meta name="subject" content="${activeMeta.subject}" />`)
         .replace(/<meta name="classification" content=".*?" \/>/, `<meta name="classification" content="${activeMeta.classification}" />`)
         .replace(/<meta name="twitter:url" content=".*?" \/>/, `<meta name="twitter:url" content="${activeMeta.url}" />`)
-        .replace(/<meta name="twitter:title" content=".*?" \/>/, `<meta name="twitter:title" content="${activeMeta.title}" />`)
-        .replace(/<meta name="twitter:description" content=".*?" \/>/, `<meta name="twitter:description" content="${activeMeta.description}" />`)
-        .replace(/"name": "World Monitor"/, `"name": "${activeMeta.siteName}"`)
-        .replace(/"alternateName": "WorldMonitor"/, `"alternateName": "${activeMeta.siteName.replace(' ', '')}"`)
-        .replace(/"url": "https:\/\/worldmonitor\.app\/"/, `"url": "${activeMeta.url}"`)
-        .replace(/"description": "Real-time global intelligence dashboard with live news, markets, military tracking, infrastructure monitoring, and geopolitical data."/, `"description": "${activeMeta.description}"`)
-        .replace(/"featureList": \[[\s\S]*?\]/, `"featureList": ${JSON.stringify(activeMeta.features, null, 8).replace(/\n/g, '\n      ')}`);
+        .replace(/<meta name="twitter:title" content=".*?" \/>/, `<meta name="twitter:title" content="${twitterTitle}" />`)
+        .replace(/<meta name="twitter:description" content=".*?" \/>/, `<meta name="twitter:description" content="${twitterDescription}" />`)
+        .replace(/<meta name="twitter:image" content=".*?" \/>/, `<meta name="twitter:image" content="${ogImage}" />`);
 
-      // Theme-color meta — warm cream for happy variant
+      const canonicalOrigin = new URL(activeMeta.url).origin;
+      result = result.replace(/https:\/\/www\.worldmonitor\.app/g, canonicalOrigin);
+      result = result.replace(/https:\/\/(www\.)?pulseofglobe\.ai/g, canonicalOrigin);
+
+      // Theme-color meta — warm cream for happy variant; Conflict Radar dark default otherwise
       if (activeVariant === 'happy') {
         result = result.replace(
           /<meta name="theme-color" content=".*?" \/>/,
           '<meta name="theme-color" content="#FAFAF5" />'
+        );
+      } else {
+        result = result.replace(
+          /<meta name="theme-color" content=".*?" \/>/,
+          '<meta name="theme-color" content="#0a0a0a" />'
         );
       }
 
@@ -607,7 +620,11 @@ export default defineConfig(({ mode }) => {
   const isE2E = process.env.VITE_E2E === '1';
   const isDesktopBuild = process.env.VITE_DESKTOP_RUNTIME === '1';
   const activeVariant = process.env.VITE_VARIANT || 'full';
-  const activeMeta = VARIANT_META[activeVariant] || VARIANT_META.full;
+  const baseVariantMeta = VARIANT_META[activeVariant] || VARIANT_META.full;
+  const canonicalOrigin = env.VITE_PUBLIC_CANONICAL_ORIGIN?.trim().replace(/\/$/, '');
+  const activeMeta: VariantMeta = canonicalOrigin
+    ? { ...baseVariantMeta, url: `${canonicalOrigin}/` }
+    : baseVariantMeta;
 
   return {
     define: {
@@ -639,8 +656,8 @@ export default defineConfig(({ mode }) => {
           scope: '/',
           display: 'standalone',
           orientation: 'any',
-          theme_color: '#0a0f0a',
-          background_color: '#0a0f0a',
+          theme_color: '#0a0a0a',
+          background_color: '#0a0a0a',
           categories: activeMeta.categories,
           icons: [
             { src: '/favico/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
