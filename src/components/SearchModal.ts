@@ -3,6 +3,7 @@ import { shuffle } from '@/utils';
 import { t } from '@/services/i18n';
 import { trackSearchUsed } from '@/services/analytics';
 import { getAllCommands, type Command } from '@/config/commands';
+import { RECENT_SEARCHES_KEY } from '@/types/brand';
 import { isMobileDevice } from '@/utils';
 
 interface CommandResult {
@@ -68,7 +69,6 @@ interface SearchableSource {
   items: { id: string; title: string; subtitle?: string; data: unknown }[];
 }
 
-const RECENT_SEARCHES_KEY = 'worldmonitor_recent_searches';
 const MAX_RECENT = 8;
 const MAX_RESULTS = 24;
 const MAX_COMMANDS = 5;

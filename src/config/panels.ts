@@ -1,4 +1,5 @@
 import type { PanelConfig, MapLayers, DataSourceId } from '@/types';
+import { STORAGE_KEYS } from '@/types/brand';
 import { SITE_VARIANT } from './variant';
 // boundary-ignore: isDesktopRuntime is a pure env probe with no service dependencies
 import { isDesktopRuntime } from '@/services/runtime';
@@ -1105,9 +1106,4 @@ export const MONITOR_COLORS = [
   '#88ffff',
 ];
 
-export const STORAGE_KEYS = {
-  panels: 'worldmonitor-panels',
-  monitors: 'worldmonitor-monitors',
-  mapLayers: 'worldmonitor-layers',
-  disabledFeeds: 'worldmonitor-disabled-feeds',
-} as const;
+export { STORAGE_KEYS };

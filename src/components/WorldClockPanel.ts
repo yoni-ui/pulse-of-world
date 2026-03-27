@@ -1,5 +1,6 @@
 import { Panel } from './Panel';
 import { getLocale } from '@/services/i18n';
+import { WORLD_CLOCK_CITIES_KEY } from '@/types/brand';
 
 interface CityEntry {
   id: string;
@@ -63,7 +64,7 @@ TIMEZONE_TO_CITY['Asia/Calcutta'] = 'mumbai';
 TIMEZONE_TO_CITY['Asia/Saigon'] = 'bangkok';
 TIMEZONE_TO_CITY['Pacific/Sydney'] = 'sydney';
 
-const STORAGE_KEY = 'worldmonitor-world-clock-cities';
+const STORAGE_KEY = WORLD_CLOCK_CITIES_KEY;
 const DEFAULT_CITIES = ['new-york', 'london', 'dubai', 'bangkok', 'tokyo', 'sydney'];
 
 function detectHomeCity(): string | null {

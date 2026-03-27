@@ -1,5 +1,6 @@
 // Base configuration shared across all variants
 import type { PanelConfig, MapLayers } from '@/types';
+import { STORAGE_KEYS } from '@/types/brand';
 
 // Shared exports (re-exported by all variants)
 export { SECTORS, COMMODITIES, MARKET_SYMBOLS } from '../markets';
@@ -74,17 +75,8 @@ export const MONITOR_COLORS = [
   '#88ffff',
 ];
 
-// Storage keys - shared
-export const STORAGE_KEYS = {
-  panels: 'worldmonitor-panels',
-  monitors: 'worldmonitor-monitors',
-  mapLayers: 'worldmonitor-layers',
-  disabledFeeds: 'worldmonitor-disabled-feeds',
-  liveChannels: 'worldmonitor-live-channels',
-  mapMode: 'worldmonitor-map-mode',          // 'flat' | 'globe'
-  activeChannel: 'worldmonitor-active-channel',
-  webcamPrefs: 'worldmonitor-webcam-prefs',
-} as const;
+// Storage keys - shared (see `config/brand.ts`)
+export { STORAGE_KEYS };
 
 // Type definitions for variant configs
 export interface VariantConfig {

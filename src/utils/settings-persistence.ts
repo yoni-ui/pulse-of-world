@@ -1,3 +1,9 @@
+import {
+  BRAND_STORAGE_PREFIX,
+  LEGACY_STORAGE_PREFIX,
+  VARIANT_STORAGE_KEY,
+} from '@/types/brand';
+
 export interface ExportedSettings {
   version: number;
   timestamp: string;
@@ -13,33 +19,24 @@ export interface ImportResult {
 
 const MAX_IMPORT_SIZE_BYTES = 5 * 1024 * 1024;
 
-const SETTINGS_KEY_PREFIXES = [
-  'worldmonitor-panels',
-  'worldmonitor-monitors',
-  'worldmonitor-layers',
-  'worldmonitor-disabled-feeds',
-  'worldmonitor-live-channels',
-  'worldmonitor-map-mode',
-  'worldmonitor-variant',
-  'worldmonitor-theme',
-  'worldmonitor-panel-spans',
-  'worldmonitor-panel-order',
-  'worldmonitor-runtime-feature-toggles',
+const EXTRA_SETTINGS_PREFIXES = [
   'wm-breaking-alerts-v1',
   'wm-globe-render-scale',
   'wm-live-streams-always-on',
   'wm-font-family',
-  'worldmonitor-active-channel',
-  'worldmonitor-webcam-prefs',
   'wm-map-theme:',
   'map-height',
   'map-pinned',
   'mobile-map-collapsed',
   'positive-threshold',
+  'panel-order',
 ];
 
+/** Accept both current and legacy key prefixes (import may contain old exports). */
 function isSettingsKey(key: string): boolean {
-  return SETTINGS_KEY_PREFIXES.some(prefix => key.startsWith(prefix));
+  if (key.startsWith(`${BRAND_STORAGE_PREFIX}-`) || key.startsWith(`${LEGACY_STORAGE_PREFIX}-`)) return true;
+  if (key.startsWith(`${BRAND_STORAGE_PREFIX}_`) || key.startsWith(`${LEGACY_STORAGE_PREFIX}_`)) return true;
+  return EXTRA_SETTINGS_PREFIXES.some(prefix => key.startsWith(prefix));
 }
 
 export function exportSettings(): void {
@@ -55,7 +52,7 @@ export function exportSettings(): void {
   const exportData: ExportedSettings = {
     version: 1,
     timestamp: new Date().toISOString(),
-    variant: localStorage.getItem('worldmonitor-variant') || 'full',
+    variant: localStorage.getItem(VARIANT_STORAGE_KEY) || 'full',
     data,
   };
 
@@ -64,7 +61,7 @@ export function exportSettings(): void {
   const a = document.createElement('a');
   a.href = url;
   const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  a.download = `worldmonitor-settings-${ts}.json`;
+  a.download = `${BRAND_STORAGE_PREFIX}-settings-${ts}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

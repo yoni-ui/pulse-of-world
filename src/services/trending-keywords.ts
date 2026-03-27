@@ -1,6 +1,7 @@
 import type { CorrelationSignal } from './correlation';
 import { mlWorker } from './ml-worker';
 import { generateSummary } from './summarization';
+import { TRENDING_CONFIG_KEY } from '@/types/brand';
 import { SUPPRESSED_TRENDING_TERMS, escapeRegex, generateSignalId, tokenize } from '@/utils/analysis-constants';
 import { t } from '@/services/i18n';
 
@@ -71,7 +72,7 @@ const MAX_TRACKED_TERMS = 10000;
 const MAX_AUTO_SUMMARIES_PER_HOUR = 5;
 const MIN_TOKEN_LENGTH = 3;
 const MIN_SPIKE_SOURCE_COUNT = 2;
-const CONFIG_KEY = 'worldmonitor-trending-config-v1';
+const CONFIG_KEY = TRENDING_CONFIG_KEY;
 const ML_ENTITY_MIN_CONFIDENCE = 0.75;
 const ML_ENTITY_BATCH_SIZE = 20;
 const ML_ENTITY_TYPES = new Set(['PER', 'ORG', 'LOC', 'MISC']);

@@ -1,5 +1,6 @@
 import { SITE_VARIANT } from '@/config/variant';
 import { getClerkToken } from '@/services/clerk';
+import { DEFAULT_API_ORIGIN, isProductionAppHostname } from '@/types/brand';
 
 const ENV = (() => {
   try {
@@ -10,7 +11,7 @@ const ENV = (() => {
 })();
 
 const WS_API_URL = ENV.VITE_WS_API_URL || '';
-const DEFAULT_WEB_API_URL = 'https://api.worldmonitor.app';
+const DEFAULT_WEB_API_URL = WS_API_URL || DEFAULT_API_ORIGIN;
 const KEYED_CLOUD_API_PATTERN = /^\/api\/(?:[^/]+\/v1\/|bootstrap(?:\?|$)|polymarket(?:\?|$)|ais-snapshot(?:\?|$))/;
 
 const DEFAULT_REMOTE_HOSTS: Record<string, string> = {
@@ -120,10 +121,8 @@ export function getApiBaseUrl(): string {
   return `http://127.0.0.1:${getLocalApiPort()}`;
 }
 
-function isWorldMonitorWebHost(hostname: string): boolean {
-  return hostname === 'worldmonitor.app'
-    || hostname === 'www.worldmonitor.app'
-    || hostname.endsWith('.worldmonitor.app');
+function isProductionWebHost(hostname: string): boolean {
+  return isProductionAppHostname(hostname);
 }
 
 export function getConfiguredWebApiBaseUrl(): string {
@@ -140,7 +139,7 @@ export function getConfiguredWebApiBaseUrl(): string {
   }
 
   const hostname = window.location?.hostname ?? '';
-  if (!isWorldMonitorWebHost(hostname)) {
+  if (!isProductionWebHost(hostname)) {
     return '';
   }
 
@@ -166,7 +165,7 @@ export function getRemoteApiBaseUrl(): string {
   if (fromHosts) return fromHosts;
 
   // Desktop builds may not set VITE_WS_API_URL; default to production.
-  if (isDesktopRuntime()) return 'https://worldmonitor.app';
+  if (isDesktopRuntime()) return 'https://pulseofglobe.ai';
   return '';
 }
 
@@ -210,6 +209,12 @@ function extractHostnames(...urls: (string | undefined)[]): string[] {
 }
 
 const APP_HOSTS = new Set([
+  'pulseofglobe.ai',
+  'www.pulseofglobe.ai',
+  'tech.pulseofglobe.ai',
+  'finance.pulseofglobe.ai',
+  'commodity.pulseofglobe.ai',
+  'happy.pulseofglobe.ai',
   'worldmonitor.app',
   'www.worldmonitor.app',
   'tech.worldmonitor.app',
@@ -223,7 +228,9 @@ function isAppOriginUrl(urlStr: string): boolean {
   try {
     const u = new URL(urlStr);
     const host = u.hostname;
-    return APP_HOSTS.has(host) || host.endsWith('.worldmonitor.app');
+    return APP_HOSTS.has(host)
+      || host.endsWith('.pulseofglobe.ai')
+      || host.endsWith('.worldmonitor.app');
   } catch {
     return false;
   }
@@ -735,7 +742,8 @@ export function installRuntimeFetchPatch(): void {
 
 import { PREMIUM_RPC_PATHS as WEB_PREMIUM_API_PATHS } from '@/shared/premium-paths';
 
-const ALLOWED_REDIRECT_HOSTS = /^https:\/\/([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)*worldmonitor\.app(:\d+)?$/;
+const ALLOWED_REDIRECT_HOSTS =
+  /^https:\/\/([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)*(?:pulseofglobe\.ai|worldmonitor\.app)(:\d+)?$/;
 
 function isAllowedRedirectTarget(url: string): boolean {
   try {

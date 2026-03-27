@@ -137,6 +137,58 @@ GPS jamming and spoofing — increasingly used as electronic warfare in conflict
 
 **CII integration**: `ingestGpsJammingForCII` maps each H3 hex centroid to a country via the local geometry service, then accumulates per-country interference counts. In the CII security component, GPS jamming contributes up to 35 points: `min(35, highCount × 5 + mediumCount × 2)`.
 
+### CorridorRisk.io (maritime corridor risk API)
+
+**CorridorRisk.io** provides real-time maritime corridor risk intelligence: composite scores, vessel traffic, conflict-linked events, and AI-generated briefs. It is a separate platform from World Monitor; use its API when you need corridor-level risk for TMS, ERP, or insurance workflows.
+
+| Item | Details |
+| ---- | ------- |
+| **Product** | [CORRIDORRISK.io](https://corridorrisk.io) — Maritime Intelligence Platform |
+| **Base URL** | `https://corridorrisk.io/api` |
+| **Auth (beta)** | Open during beta; production will use API keys — contact [hello@corridorrisk.io](mailto:hello@corridorrisk.io) for early access |
+| **Rate limit (beta)** | Soft limit ~100 requests/minute per IP; higher throughput on request |
+
+**Corridor IDs** (used across all endpoints):
+
+| ID | Region |
+| -- | ------ |
+| `east-med` | Eastern Mediterranean |
+| `persian-gulf` | Persian Gulf & Strait of Hormuz |
+| `red-sea` | Red Sea & Bab-el-Mandeb |
+| `south-china-sea` | South China Sea |
+| `black-sea` | Black Sea & Turkish Straits |
+| `gulf-guinea` | Gulf of Guinea |
+| `suez` | Suez Canal Approach |
+
+**Endpoints**
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET | `/api/corridors` | All corridors with latest scores & traffic |
+| GET | `/api/score/{corridor_id}` | Score history & vessel traffic trends |
+| GET | `/api/events/{corridor_id}` | Conflict events with source links |
+| GET | `/api/weather/{corridor_id}` | Marine weather conditions |
+| POST | `/api/subscribe` | Subscribe to Maritime Risk Brief |
+
+**Example**
+
+```bash
+curl https://corridorrisk.io/api/corridors
+```
+
+**Response fields** (per corridor object): `id`, `name`, `score` (0–100 composite), `vessel_count`, `disruption_pct` (vs baseline), `incident_count_7d`, `incident_count_30d`, `risk_report` (`situation`, `impact`, `key_incidents`, `outlook`, `action`), `computed_at`.
+
+**Scoring methodology** (hybrid model: AIS + GDELT; GDELT-only fallback when AIS is unavailable):
+
+| Component | Weight | Source | Role |
+| --------- | ------ | ------ | ---- |
+| Traffic disruption | 40% | AIS (Datalastic) | Vessel count vs historical baseline at monitoring port |
+| Event volume | 25% | GDELT | Z-score anomaly of conflict event frequency |
+| Conflict composition | 20% | GDELT | Share of material conflict vs verbal tension |
+| Trend | 15% | GDELT | Week-over-week change in event frequency |
+
+**Data & AI** (per vendor): GDELT + Datalastic AIS; AI (Claude); weather via Open-Meteo.
+
 ### Security Advisory Aggregation
 
 Government travel advisories serve as expert risk assessments from national intelligence agencies — when the US State Department issues a "Do Not Travel" advisory, it reflects classified threat intelligence that no open-source algorithm can replicate.

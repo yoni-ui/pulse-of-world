@@ -1,8 +1,9 @@
+import { PANEL_COL_SPANS_STORAGE_KEY, PANEL_SPANS_STORAGE_KEY } from '@/types/brand';
 import { loadFromStorage, saveToStorage } from '@/utils';
 
 const STORAGE_KEY = 'wm-mcp-panels';
-const PANEL_SPANS_KEY = 'worldmonitor-panel-spans';
-const PANEL_COL_SPANS_KEY = 'worldmonitor-panel-col-spans';
+const PANEL_SPANS_KEY = PANEL_SPANS_STORAGE_KEY;
+const PANEL_COL_SPANS_KEY = PANEL_COL_SPANS_STORAGE_KEY;
 const MAX_PANELS = 10;
 
 export interface McpPreset {

@@ -238,6 +238,29 @@
         <p><a href="https://pulseofglobe.ai/pro" style="color:#4ade80;">PulseOfGlobe AI Pro</a></p>
       </div>
     </noscript>
+    <!-- Migrate localStorage from worldmonitor-* to pulseofglobe-* before app modules load -->
+    <script>
+    (function(){
+      try {
+        var marker = 'pulseofglobe-storage-migrated-v1';
+        if (localStorage.getItem(marker)) return;
+        var keys = [];
+        for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i));
+        var ld = 'worldmonitor-';
+        var lu = 'worldmonitor_';
+        keys.forEach(function(k) {
+          if (!k) return;
+          var nk = null;
+          if (k.indexOf(ld) === 0) nk = 'pulseofglobe-' + k.slice(ld.length);
+          else if (k.indexOf(lu) === 0) nk = 'pulseofglobe_' + k.slice(lu.length);
+          if (!nk || localStorage.getItem(nk) !== null) return;
+          var v = localStorage.getItem(k);
+          if (v !== null) localStorage.setItem(nk, v);
+        });
+        localStorage.setItem(marker, '1');
+      } catch (e) {}
+    })();
+    </script>
     <!-- Force-clear stale service worker if module scripts 404 (post-deploy cache mismatch) -->
     <script>
     (function(){

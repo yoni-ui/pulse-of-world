@@ -1,10 +1,15 @@
 import { loadFromStorage, saveToStorage } from '@/utils';
 import { sanitizeWidgetHtml } from '@/utils/widget-sanitizer';
 import { getAuthState } from '@/services/auth-state';
+import {
+  CUSTOM_WIDGETS_STORAGE_KEY,
+  PANEL_COL_SPANS_STORAGE_KEY,
+  PANEL_SPANS_STORAGE_KEY,
+} from '@/types/brand';
 
-const STORAGE_KEY = 'wm-custom-widgets';
-const PANEL_SPANS_KEY = 'worldmonitor-panel-spans';
-const PANEL_COL_SPANS_KEY = 'worldmonitor-panel-col-spans';
+const STORAGE_KEY = CUSTOM_WIDGETS_STORAGE_KEY;
+const PANEL_SPANS_KEY = PANEL_SPANS_STORAGE_KEY;
+const PANEL_COL_SPANS_KEY = PANEL_COL_SPANS_STORAGE_KEY;
 const MAX_WIDGETS = 10;
 const MAX_HISTORY = 10;
 const MAX_HTML_CHARS = 50_000;
@@ -97,15 +102,20 @@ export function getWidget(id: string): CustomWidgetSpec | null {
 }
 
 // ── Cross-domain key helpers ──────────────────────────────────────────────
-// Cookies with domain=.worldmonitor.app are shared across all subdomains
-// (worldmonitor.app, tech., finance., commodity., happy., etc.).
+// Cookies with domain=.pulseofglobe.ai / .worldmonitor.app are shared across subdomains.
 // We read cookie first and fall back to localStorage for migration compat.
 
-const COOKIE_DOMAIN = '.worldmonitor.app';
 const KEY_MAX_AGE = 365 * 24 * 60 * 60;
 
+function cookieDomainForHost(): string {
+  const h = location.hostname;
+  if (h.endsWith('pulseofglobe.ai')) return '.pulseofglobe.ai';
+  return '.worldmonitor.app';
+}
+
 function usesCookies(): boolean {
-  return location.hostname.endsWith('worldmonitor.app');
+  const h = location.hostname;
+  return h.endsWith('worldmonitor.app') || h.endsWith('pulseofglobe.ai');
 }
 
 function getCookieValue(name: string): string {
@@ -119,7 +129,7 @@ function getCookieValue(name: string): string {
 
 function setDomainCookie(name: string, value: string): void {
   if (!usesCookies()) return;
-  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${COOKIE_DOMAIN}; path=/; max-age=${KEY_MAX_AGE}; SameSite=Lax; Secure`;
+  document.cookie = `${name}=${encodeURIComponent(value)}; domain=${cookieDomainForHost()}; path=/; max-age=${KEY_MAX_AGE}; SameSite=Lax; Secure`;
 }
 
 function getKey(name: string): string {

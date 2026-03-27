@@ -5,13 +5,14 @@ import { t } from '@/services/i18n';
 import { getSignalContext } from '@/utils/analysis-constants';
 import { escapeHtml } from '@/utils/sanitize';
 import { trackFindingClicked } from '@/services/analytics';
+import { INTEL_FINDINGS_KEY } from '@/types/brand';
 
 const LOW_COUNT_THRESHOLD = 3;
 const MAX_VISIBLE_FINDINGS = 10;
 const SORT_TIME_TOLERANCE_MS = 60000;
 const REFRESH_INTERVAL_MS = 180000;
 const ALERT_HOURS = 6;
-const STORAGE_KEY = 'worldmonitor-intel-findings';
+const STORAGE_KEY = INTEL_FINDINGS_KEY;
 const POPUP_STORAGE_KEY = 'wm-alert-popup-enabled';
 
 type FindingSource = 'signal' | 'alert';
