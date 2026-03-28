@@ -1769,7 +1769,10 @@
       "filterPolitics": "Politics",
       "filterMiddleeast": "Middle East",
       "live": "LIVE",
-      "viewSource": "View Source"
+      "viewSource": "View Source",
+      "livePulse": "Live pulse (WebSocket)",
+      "wsDisabled": "Set VITE_WS_RELAY_URL to enable live Telegram push",
+      "waitingLive": "Waiting for new posts from the relay…"
     },
     "investments": {
       "infoTooltip": "Database of Saudi Arabia and UAE foreign direct investments in global critical infrastructure. Click a row to fly to the investment on the map.",

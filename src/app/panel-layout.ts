@@ -83,8 +83,6 @@ import { VARIANT_META } from '@/config/variant-meta';
 import {
   CANONICAL_ORIGIN,
   CANONICAL_WWW_ORIGIN,
-  GITHUB_API_REPO_URL,
-  GITHUB_REPO_URL,
   VARIANT_PRODUCTION_URLS,
 } from '@/types/brand';
 import { t } from '@/services/i18n';
@@ -146,7 +144,6 @@ export class PanelLayoutManager implements AppModule {
     this.unsubscribeAuth = subscribeAuthState((state) => {
       this.updatePanelGating(state);
     });
-    this.fetchGitHubStars();
   }
 
   destroy(): void {

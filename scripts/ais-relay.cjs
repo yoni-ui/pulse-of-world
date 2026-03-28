@@ -41,7 +41,7 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-const MAX_WS_CLIENTS = 10; // Cap WS clients — app uses HTTP snapshots, not WS
+const MAX_WS_CLIENTS = Math.max(10, Number(process.env.MAX_WS_CLIENTS || 48)); // WS: AIS + Telegram live clients
 const UPSTREAM_QUEUE_HIGH_WATER = Math.max(500, Number(process.env.AIS_UPSTREAM_QUEUE_HIGH_WATER || 4000));
 const UPSTREAM_QUEUE_LOW_WATER = Math.max(
   100,
@@ -445,6 +445,126 @@ function normalizeTelegramMessage(msg, channel) {
   };
 }
 
+/** Push live Telegram items to all connected WS clients (browser + tools). */
+function broadcastTelegramUpdate(item) {
+  const payload = JSON.stringify({
+    type: 'telegram_update',
+    channelName: item.channelTitle || item.channel,
+    channel: item.channel,
+    text: item.text || '',
+    timestamp: item.ts,
+    imageUrl: Array.isArray(item.mediaUrls) && item.mediaUrls[0] ? item.mediaUrls[0] : null,
+    url: item.url,
+    id: item.id,
+  });
+  let n = 0;
+  for (const ws of clients) {
+    if (ws.readyState !== WebSocket.OPEN) continue;
+    if (ws.bufferedAmount > 2 * 1024 * 1024) continue;
+    try {
+      ws.send(payload);
+      n++;
+    } catch {
+      // ignore
+    }
+  }
+  if (n > 0 && process.env.TELEGRAM_WS_DEBUG === '1') {
+    console.log(`[Relay] Telegram WS fanout: ${n} clients, id=${item.id}`);
+  }
+}
+
+const TELEGRAM_REALTIME_PUSH = process.env.TELEGRAM_REALTIME_PUSH !== 'false';
+const TELEGRAM_WS_IMAGE_MAX_BYTES = Math.min(500_000, Math.max(20_000, Number(process.env.TELEGRAM_WS_IMAGE_MAX_BYTES || 350_000)));
+let telegramRealtimeHandlerInstalled = false;
+
+async function buildTelegramItemWithMedia(client, msg, channel) {
+  const base = normalizeTelegramMessage(msg, channel);
+  const mediaUrls = [];
+  if (msg.photo) {
+    try {
+      const buf = await Promise.race([
+        client.downloadMedia(msg, { thumb: true }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12_000)),
+      ]);
+      if (Buffer.isBuffer(buf) && buf.length > 0 && buf.length <= TELEGRAM_WS_IMAGE_MAX_BYTES) {
+        mediaUrls.push(`data:image/jpeg;base64,${buf.toString('base64')}`);
+      }
+    } catch {
+      // thumb optional
+    }
+  }
+  if (!base.text && mediaUrls.length === 0) return null;
+  return { ...base, mediaUrls };
+}
+
+async function resolveMessageUsername(client, msg) {
+  try {
+    if (typeof msg.getChat === 'function') {
+      const chat = await msg.getChat();
+      if (chat && chat.username) return String(chat.username).toLowerCase();
+    }
+  } catch {
+    // fall through
+  }
+  try {
+    const ent = await client.getEntity(msg.peerId);
+    if (ent && ent.username) return String(ent.username).toLowerCase();
+  } catch {
+    // ignore
+  }
+  return '';
+}
+
+async function installTelegramRealtimeHandler(client) {
+  if (!TELEGRAM_ENABLED || !TELEGRAM_REALTIME_PUSH || telegramRealtimeHandlerInstalled) return;
+  const channels = telegramState.channels.length ? telegramState.channels : loadTelegramChannels();
+  if (!channels.length) return;
+
+  const allowed = new Set(channels.map(c => String(c.handle).replace(/^@/, '').toLowerCase()));
+  const byHandle = Object.fromEntries(channels.map(c => [String(c.handle).replace(/^@/, '').toLowerCase(), c]));
+
+  try {
+    const { NewMessage } = await import('telegram/events/index.js');
+    client.addEventHandler(
+      async (event) => {
+        try {
+          const msg = event?.message;
+          if (!msg || msg.id == null) return;
+
+          const uname = await resolveMessageUsername(client, msg);
+          if (!uname || !allowed.has(uname)) return;
+
+          const channel = byHandle[uname];
+          if (!channel) return;
+
+          const item = await buildTelegramItemWithMedia(client, msg, channel);
+          if (!item) return;
+
+          const seen = new Set(telegramState.items.map((i) => i.id));
+          if (!seen.has(item.id)) {
+            telegramState.items = [item, ...telegramState.items]
+              .filter((row, i, arr) => arr.findIndex((x) => x.id === row.id) === i)
+              .sort((a, b) => (b.ts || '').localeCompare(a.ts || ''))
+              .slice(0, TELEGRAM_MAX_FEED_ITEMS);
+          }
+
+          broadcastTelegramUpdate(item);
+        } catch (e) {
+          const em = e?.message || String(e);
+          if (!/TIMEOUT|timeout/.test(em)) {
+            console.warn('[Relay] Telegram realtime message error:', em);
+          }
+        }
+      },
+      new NewMessage({}),
+    );
+    telegramRealtimeHandlerInstalled = true;
+    console.log('[Relay] Telegram GramJS NewMessage listener active (broadcasts telegram_update over WS)');
+  } catch (e) {
+    console.warn('[Relay] Telegram realtime listener install failed:', e?.message || e);
+  }
+}
+
 let telegramPermanentlyDisabled = false;
 
 async function initTelegramClientIfNeeded() {
@@ -470,6 +590,7 @@ async function initTelegramClientIfNeeded() {
     telegramState.client = client;
     telegramState.lastError = null;
     console.log('[Relay] Telegram client connected');
+    await installTelegramRealtimeHandler(client);
     return true;
   } catch (e) {
     const em = e?.message || String(e);
@@ -5055,6 +5176,18 @@ function getRelaySecretFromRequest(req) {
   if (typeof auth === 'string' && auth.toLowerCase().startsWith('bearer ')) {
     const token = auth.slice(7).trim();
     if (token) return token;
+  }
+  // Browser WebSocket cannot set custom headers — allow ?key= / ?token= on upgrade URL
+  try {
+    const u = new URL(req.url || '/', 'http://localhost');
+    const q =
+      u.searchParams.get('key')
+      || u.searchParams.get('token')
+      || u.searchParams.get('x-relay-key')
+      || u.searchParams.get('relay_key');
+    if (q && q.trim()) return q.trim();
+  } catch {
+    // ignore
   }
   return '';
 }

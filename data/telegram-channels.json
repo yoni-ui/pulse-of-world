@@ -367,6 +367,35 @@
         "maxMessages": 20
       }
     ],
-    "finance": []
+    "finance": [],
+    "ethiopia": [
+      {
+        "handle": "addisstandard",
+        "label": "Addis Standard",
+        "topic": "breaking",
+        "tier": 1,
+        "enabled": true,
+        "region": "ethiopia",
+        "maxMessages": 30
+      },
+      {
+        "handle": "fanabc",
+        "label": "Fana Broadcasting",
+        "topic": "breaking",
+        "tier": 1,
+        "enabled": true,
+        "region": "ethiopia",
+        "maxMessages": 30
+      },
+      {
+        "handle": "ebctv",
+        "label": "EBC",
+        "topic": "politics",
+        "tier": 2,
+        "enabled": true,
+        "region": "ethiopia",
+        "maxMessages": 25
+      }
+    ]
   }
 }

@@ -1,7 +1,9 @@
+import { h as preactH, render } from 'preact';
 import { Panel } from './Panel';
 import { sanitizeUrl } from '@/utils/sanitize';
 import { t } from '@/services/i18n';
 import { h, replaceChildren, safeHtml } from '@/utils/dom-utils';
+import { TelegramIntelLiveStrip } from './TelegramIntelLiveStrip';
 import {
   TELEGRAM_TOPICS,
   formatTelegramTime,
@@ -152,6 +154,15 @@ export class TelegramIntelPanel extends Panel {
   }
 
   public destroy(): void {
+    if (this.liveMount) {
+      try {
+        render(null, this.liveMount);
+      } catch {
+        // ignore
+      }
+      this.liveMount.remove();
+      this.liveMount = null;
+    }
     if (this.tabsEl) {
       this.tabsEl.remove();
       this.tabsEl = null;
