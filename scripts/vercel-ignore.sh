@@ -2,15 +2,22 @@
 # Vercel Ignored Build Step: exit 0 = skip, exit 1 = build
 # Only build when web-relevant files change. Skip desktop, docs, scripts, CI, etc.
 
-# On main: skip if ONLY scripts/, docs/, .github/, or non-web files changed
-if [ "$VERCEL_GIT_COMMIT_REF" = "main" ] && [ -n "$VERCEL_GIT_PREVIOUS_SHA" ]; then
-  git cat-file -e "$VERCEL_GIT_PREVIOUS_SHA" 2>/dev/null && {
-    WEB_CHANGES=$(git diff --name-only "$VERCEL_GIT_PREVIOUS_SHA" HEAD -- \
-      'src/' 'api/' 'server/' 'shared/' 'public/' 'blog-site/' 'pro-test/' 'proto/' 'convex/' \
-      'package.json' 'package-lock.json' 'vite.config.ts' 'tsconfig.json' \
-      'tsconfig.api.json' 'vercel.json' 'middleware.ts' | head -1)
-    [ -z "$WEB_CHANGES" ] && echo "Skipping: no web-relevant changes on main" && exit 0
-  }
+# Normalize branch name (Vercel usually sets VERCEL_GIT_COMMIT_REF to "main", not refs/heads/main)
+REF="${VERCEL_GIT_COMMIT_REF##refs/heads/}"
+
+# On main: skip only when we can diff against a *previous production deploy* and nothing web-relevant changed.
+# If VERCEL_GIT_PREVIOUS_SHA is missing (first deploy, cache unavailable, or fresh project), we must NOT fall
+# through to the "preview without PR" skip — that would cancel production builds with exit 0.
+if [ "$REF" = "main" ]; then
+  if [ -z "$VERCEL_GIT_PREVIOUS_SHA" ] || ! git cat-file -e "$VERCEL_GIT_PREVIOUS_SHA" 2>/dev/null; then
+    echo "Building: main (no valid VERCEL_GIT_PREVIOUS_SHA — first deploy or no prior build to compare)"
+    exit 1
+  fi
+  WEB_CHANGES=$(git diff --name-only "$VERCEL_GIT_PREVIOUS_SHA" HEAD -- \
+    'src/' 'api/' 'server/' 'shared/' 'public/' 'blog-site/' 'pro-test/' 'proto/' 'convex/' \
+    'package.json' 'package-lock.json' 'vite.config.ts' 'tsconfig.json' \
+    'tsconfig.api.json' 'vercel.json' 'middleware.ts' | head -1)
+  [ -z "$WEB_CHANGES" ] && echo "Skipping: no web-relevant changes on main" && exit 0
   exit 1
 fi
 
